@@ -2,63 +2,42 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useRef } from "react";
 import { business, occasions } from "@/data/business";
 import { img } from "@/lib/images";
 import { useRichMotion } from "@/lib/motion";
 import { Button, ease } from "./ui";
 import { label, wrap } from "./styles";
 
-const slides = [
-  { src: img.hero, alt: "Mladenački sto sa inicijalima, svećama i belim cvećem pod kristalnim lusterom", pos: "50% 40%" },
-  { src: img.salaDetalj, alt: "Sala sa kristalnim lusterom i postavljenim stolovima", pos: "50% 35%" },
-  { src: img.basta, alt: "Senica u privatnoj bašti za ceremoniju na otvorenom", pos: "50% 45%" },
-  { src: img.dekoracija, alt: "Visoki cvetni aranžmani od belih ruža i zlatni svećnjaci", pos: "50% 40%" },
-];
-const SLIDE_MS = 6500;
-const FADE_S = 1.6;
+// Dron snimak sa njihovog reela "Kako doći do nas" (bez titlova i zvuka), kratka petlja.
+const VIDEO = "/video/dron.mp4";
 const words = "Vaš datum zaslužuje savršeno mesto.".split(" ");
 
 export function Hero() {
   const reduced = useReducedMotion();
   const rich = useRichMotion();
-  const [active, setActive] = useState(0);
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", rich ? "14%" : "0%"]);
 
-  useEffect(() => {
-    if (reduced) return; // bez automatske smene slajdova za "manje animacija"
-    const t = setTimeout(() => setActive((a) => (a + 1) % slides.length), SLIDE_MS);
-    return () => clearTimeout(t);
-  }, [active, reduced]);
-
   return (
-    <section ref={ref} id="pocetna" aria-roledescription="slajdšou" className="relative flex min-h-[100svh] items-end overflow-hidden bg-ink text-paper md:items-center">
+    <section ref={ref} id="pocetna" className="relative flex min-h-[100svh] items-end overflow-hidden bg-ink text-paper md:items-center">
       <motion.div style={{ y }} className="absolute -inset-y-[8%] inset-x-0">
-        {slides.map((s, i) => {
-          const on = i === active;
-          return (
-            <motion.div
-              key={s.src.src}
-              aria-hidden={!on}
-              initial={false}
-              animate={{ opacity: on ? 1 : 0 }}
-              transition={{ duration: FADE_S, ease: "easeInOut" }}
-              className="absolute inset-0"
-            >
-              {/* Ken Burns: spor zum dok je slajd aktivan, tihi reset tek kad se potpuno sakrije */}
-              <motion.div
-                initial={false}
-                animate={{ scale: on && !reduced ? 1 : 1.1 }}
-                transition={on ? { duration: SLIDE_MS / 1000 + FADE_S, ease: "linear" } : { delay: FADE_S, duration: 0 }}
-                className="absolute inset-0"
-              >
-                <Image src={s.src} alt={s.alt} fill priority={i === 0} placeholder="blur" sizes="100vw" className="object-cover" style={{ objectPosition: s.pos }} />
-              </motion.div>
-            </motion.div>
-          );
-        })}
+        {/* Poster je odmah vidljiv (i ostaje za "manje animacija"); video preko njega kad se učita */}
+        <Image src={img.dronPoster} alt="Pogled iz vazduha na Adu Ciganliju i put do Gold Ade" fill priority placeholder="blur" sizes="100vw" className="object-cover" />
+        {!reduced && (
+          <video
+            className="absolute inset-0 h-full w-full object-cover"
+            src={VIDEO}
+            poster={img.dronPoster.src}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            aria-hidden
+          />
+        )}
       </motion.div>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(27,24,20,.35),rgba(27,24,20,.78)_75%)]" />
       <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/20 to-ink/40" />
@@ -118,24 +97,6 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Izbor slajda: tanke zlatne linije koje se pune dok slajd traje */}
-      <div className="absolute inset-x-0 bottom-6 z-10 flex justify-center gap-2.5 md:bottom-10" role="group" aria-label="Izbor fotografije">
-        {slides.map((s, i) => (
-          <button key={s.src.src} type="button" onClick={() => setActive(i)} aria-label={`Fotografija ${i + 1} od ${slides.length}`} aria-current={i === active} className="group grid h-8 w-12 place-items-center">
-            <span className="relative block h-px w-full overflow-hidden bg-paper/30 transition-colors group-hover:bg-paper/60">
-              {i === active && (
-                <motion.span
-                  key={`p-${active}`}
-                  className="absolute inset-y-0 left-0 bg-gold-light"
-                  initial={{ width: reduced ? "100%" : "0%" }}
-                  animate={{ width: "100%" }}
-                  transition={{ duration: reduced ? 0 : SLIDE_MS / 1000, ease: "linear" }}
-                />
-              )}
-            </span>
-          </button>
-        ))}
-      </div>
     </section>
   );
 }
