@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
 import { business } from "@/data/business";
 import { navLinks } from "@/data/nav";
@@ -11,6 +11,21 @@ import { ease } from "./ui";
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [current, setCurrent] = useState("");
+  const { scrollYProgress } = useScroll();
+
+  // Aktivna stavka menija prati sekciju koja je trenutno na sredini ekrana.
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && setCurrent(`#${e.target.id}`)),
+      { rootMargin: "-45% 0px -50% 0px" },
+    );
+    navLinks.forEach((l) => {
+      const el = document.querySelector(l.href);
+      if (el) io.observe(el);
+    });
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -33,16 +48,20 @@ export function Nav() {
         } ${menuOpen ? "!bg-ink !text-paper !shadow-none" : ""}`}
       >
         <nav aria-label="Glavna navigacija" className="mx-auto flex w-full max-w-[1320px] items-center justify-between px-5 md:px-10">
-          <a href="#pocetna" aria-label="Zona 20 — početna" onClick={() => setMenuOpen(false)}>
+          <a href="#pocetna" aria-label="Gold Ada Exclusive — početna" onClick={() => setMenuOpen(false)}>
             <Logo priority height={solid ? 40 : 52} />
           </a>
 
           <ul className="hidden items-center gap-9 lg:flex">
             {navLinks.map((l) => (
               <li key={l.href}>
-                <a href={l.href} className="group relative font-label text-[0.78rem] font-medium uppercase tracking-[0.24em]">
+                <a
+                  href={l.href}
+                  aria-current={current === l.href ? "location" : undefined}
+                  className="group relative font-label text-[0.78rem] font-medium uppercase tracking-[0.24em] transition-colors hover:text-crust"
+                >
                   {l.label}
-                  <span className="absolute -bottom-1.5 left-0 h-px w-full origin-left scale-x-0 bg-crust transition-transform duration-500 group-hover:scale-x-100" />
+                  <span className={`absolute -bottom-1.5 left-0 h-px w-full origin-left bg-crust transition-transform duration-500 group-hover:scale-x-100 ${current === l.href ? "scale-x-100" : "scale-x-0"}`} />
                 </a>
               </li>
             ))}
@@ -54,7 +73,7 @@ export function Nav() {
             </a>
             <a
               href="#upit"
-              className="hidden min-h-11 items-center rounded-full bg-crust px-6 font-label text-[0.76rem] font-medium uppercase tracking-[0.2em] text-ink transition-colors duration-300 hover:bg-gold-light sm:inline-flex"
+              className="shine hidden min-h-11 items-center rounded-full bg-crust px-6 font-label text-[0.76rem] font-medium uppercase tracking-[0.2em] text-ink transition-colors duration-300 hover:bg-gold-light sm:inline-flex"
             >
               Zakažite obilazak
             </a>
@@ -73,6 +92,8 @@ export function Nav() {
             </button>
           </div>
         </nav>
+        {/* Tanka zlatna linija napretka čitanja */}
+        <motion.div aria-hidden style={{ scaleX: scrollYProgress }} className={`absolute inset-x-0 bottom-0 h-px origin-left bg-crust transition-opacity duration-500 ${solid && !menuOpen ? "opacity-100" : "opacity-0"}`} />
       </header>
 
       <AnimatePresence>

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { features, occasions } from "@/data/business";
 import { img } from "@/lib/images";
-import { Button, Reveal } from "./ui";
+import { Ornament } from "./Ornament";
+import { Button, ImageReveal, Reveal } from "./ui";
 import { h2, label, section, wrap } from "./styles";
 
 const roman = ["I", "II", "III", "IV", "V", "VI"];
@@ -13,9 +14,9 @@ export function Offer() {
         {/* Fotografija sa zlatnim okvirom pomerenim u stranu */}
         <Reveal className="relative lg:col-span-5">
           <div aria-hidden className="absolute -top-4 -left-4 h-full w-full border border-crust/60 md:-top-6 md:-left-6" />
-          <div className="relative aspect-[4/5] overflow-hidden">
-            <Image src={img.sto} alt="Okrugli sto sa zlatnim podmetačima, svećnjakom i belim ružama" fill placeholder="blur" sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
-          </div>
+          <ImageReveal tone="bg-ink" className="group aspect-[4/5]">
+            <Image src={img.sto} alt="Okrugli sto sa zlatnim podmetačima, svećnjakom i belim ružama" fill placeholder="blur" sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover transition-transform duration-[1.6s] ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.05]" />
+          </ImageReveal>
         </Reveal>
 
         <div className="lg:col-span-7">
@@ -25,15 +26,16 @@ export function Offer() {
               Vaš zadatak je da <span className="gold-text italic">uživate</span>.
             </h2>
             <p className="mt-5 text-lg text-paper/70">Za sve ostalo brinemo mi.</p>
+            <Ornament light className="mt-7 justify-start" />
           </Reveal>
 
           <ul className="mt-12 grid gap-x-10 sm:grid-cols-2">
             {features.map((f, i) => (
               <li key={f.title}>
-                <Reveal delay={i * 0.05} className="flex gap-5 border-t border-crust/30 py-6">
-                  <span className="w-8 shrink-0 font-display text-xl italic text-crust">{roman[i]}</span>
+                <Reveal delay={i * 0.07} className="group flex gap-5 border-t border-crust/30 py-6 transition-colors duration-500 hover:border-crust">
+                  <span className="w-8 shrink-0 font-display text-xl italic text-crust transition-transform duration-500 group-hover:-translate-y-0.5">{roman[i]}</span>
                   <div>
-                    <h3 className="font-display text-[1.5rem] leading-tight">{f.title}</h3>
+                    <h3 className="font-display text-[1.5rem] leading-tight transition-colors duration-500 group-hover:text-gold-light">{f.title}</h3>
                     <p className="mt-1.5 text-[1rem] leading-relaxed text-paper/70">{f.text}</p>
                   </div>
                 </Reveal>

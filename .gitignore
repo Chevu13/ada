@@ -7,3 +7,5 @@ next-env.d.ts
 candidates
 /images
 .claude
+
+.vercel

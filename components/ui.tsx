@@ -21,6 +21,23 @@ export function Reveal({ children, delay = 0, className, ...rest }: HTMLMotionPr
   );
 }
 
+/** Otkrivanje slike: krem "zavesa" se povlači kad slika uđe u ekran (samo transform, bez pomeranja rasporeda). */
+export function ImageReveal({ children, className = "", tone = "bg-cream" }: { children: ReactNode; className?: string; tone?: string }) {
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      {children}
+      <motion.div
+        aria-hidden
+        className={`absolute inset-0 origin-right ${tone}`}
+        initial={{ scaleX: 1 }}
+        whileInView={{ scaleX: 0 }}
+        viewport={{ once: true, margin: "-15% 0px" }}
+        transition={{ duration: 1.2, ease }}
+      />
+    </div>
+  );
+}
+
 type BtnProps = { children: ReactNode; variant?: "solid" | "ghost" | "link" | "wolt" | "gold"; className?: string; href: string };
 
 export function Button({ children, variant = "solid", className = "", href }: BtnProps) {
@@ -29,7 +46,7 @@ export function Button({ children, variant = "solid", className = "", href }: Bt
     ghost: "min-h-13 rounded-full px-8 border border-current hover:border-crust hover:text-crust",
     link: "border-b border-current py-2 hover:opacity-65",
     wolt: "min-h-12 rounded-full px-7 bg-tomato text-paper hover:bg-ink",
-    gold: "min-h-13 rounded-full px-8 bg-crust text-ink hover:bg-gold-light",
+    gold: "shine min-h-13 rounded-full px-8 bg-crust text-ink hover:bg-gold-light",
   }[variant];
   const external = href.startsWith("http");
   return (

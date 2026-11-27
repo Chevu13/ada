@@ -1,4 +1,5 @@
 import { business, directions } from "@/data/business";
+import { Ornament } from "./Ornament";
 import { Button, Reveal } from "./ui";
 import { accent, h2, label, section, wrap } from "./styles";
 
@@ -11,6 +12,7 @@ export function Location() {
           <h2 id="lokacija-naslov" className={`${h2} mt-5`}>
             Kako do <span className={accent}>nas</span>
           </h2>
+          <Ornament className="mt-6 justify-start" />
           <p className="mt-5 text-lg leading-relaxed text-ink-soft">
             {business.street}, {business.area}, {business.city} — na samo nekoliko minuta od Ada Mall-a.
           </p>

@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { business, occasions } from "@/data/business";
+import { useEffect, useState, type FormEvent } from "react";
+import { business, occasions, spaces } from "@/data/business";
+import { Ornament } from "./Ornament";
 import { Reveal } from "./ui";
 import { accent, h2, label, section, wrap } from "./styles";
 
-type Form = { name: string; occasion: string; date: string; guests: string; note: string };
+type Form = { name: string; occasion: string; space: string; date: string; guests: string; note: string };
+
+const ANY_SPACE = "Još ne znam";
 
 /** Tekst upita — šalje se kao poruka na Instagram (njihov kanal: "Pišite nam u DM") ili čita telefonom. */
 export function inquiryText(f: Form) {
@@ -13,6 +16,7 @@ export function inquiryText(f: Form) {
     `Dobar dan, zanima me termin u ${business.name}.`,
     `Ime: ${f.name}`,
     `Proslava: ${f.occasion}`,
+    f.space !== ANY_SPACE && `Prostor: ${f.space}`,
     f.date && `Datum: ${f.date.split("-").reverse().join(".")}.`,
     f.guests && `Broj gostiju: ${f.guests}`,
     f.note && `Napomena: ${f.note}`,
@@ -24,9 +28,16 @@ export function inquiryText(f: Form) {
 const field = "mt-2 block w-full border-0 border-b border-ink/25 bg-transparent px-0 py-3 text-lg text-ink outline-none transition-colors placeholder:text-ink/35 focus:border-crust";
 
 export function Inquiry() {
-  const [f, setF] = useState<Form>({ name: "", occasion: occasions[0], date: "", guests: "", note: "" });
+  const [f, setF] = useState<Form>({ name: "", occasion: occasions[0], space: ANY_SPACE, date: "", guests: "", note: "" });
   const [state, setState] = useState<"idle" | "copied" | "manual" | "error">("idle");
   const set = (k: keyof Form) => (e: { target: { value: string } }) => setF((v) => ({ ...v, [k]: e.target.value }));
+
+  // Klik na "Upit za ovaj prostor" u sekciji Prostor unapred bira prostor.
+  useEffect(() => {
+    const on = (e: Event) => setF((v) => ({ ...v, space: (e as CustomEvent<string>).detail }));
+    window.addEventListener("gold:space", on);
+    return () => window.removeEventListener("gold:space", on);
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -48,6 +59,7 @@ export function Inquiry() {
           <h2 id="upit-naslov" className={`${h2} mt-5`}>
             Zakažite <span className={accent}>obilazak</span>
           </h2>
+          <Ornament className="mt-6 justify-start" />
           <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-soft">
             Pišite nam za ponudu, obilazak prostora i slobodne termine. Rado ćemo vam pokazati zašto mladenci svoje najlepše uspomene stvaraju upravo kod nas.
           </p>
@@ -78,6 +90,14 @@ export function Inquiry() {
                 <span className={`${label} text-muted`}>Vrsta proslave</span>
                 <select className={field} value={f.occasion} onChange={set("occasion")}>
                   {occasions.map((o) => (
+                    <option key={o}>{o}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className={`${label} text-muted`}>Prostor</span>
+                <select className={field} value={f.space} onChange={set("space")}>
+                  {[ANY_SPACE, ...spaces.map((sp) => sp.name)].map((o) => (
                     <option key={o}>{o}</option>
                   ))}
                 </select>

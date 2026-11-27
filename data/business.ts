@@ -33,11 +33,32 @@ export const business = {
   siteUrl: "https://goldada.vercel.app",
 } as const;
 
-/** Dva prostora (VERIFIKOVANO, bio) i bašta (objave). */
+/** Dva prostora (VERIFIKOVANO, bio; ista adresa na Google mapama) i bašta (objave). Detalji = ono što se vidi na njihovim fotografijama. */
 export const spaces = [
-  { id: "gold", name: "Gold Ada Exclusive", guests: "50 – 200 gostiju", text: "Elegantna sala sa kristalnim lusterima, mladenačkim stolom i podijumom za prvi ples.", image: "sala" as const },
-  { id: "grand", name: "Grand Ada Exclusive", guests: "100 – 400 gostiju", text: "Za velika venčanja i proslave, do 400 gostiju.", image: "kompleks" as const },
-  { id: "basta", name: "Privatna bašta", guests: "Ceremonija na otvorenom", text: "Bajkovita bašta za venčanje pod vedrim nebom i fotografisanje.", image: "basta" as const },
+  {
+    id: "gold",
+    name: "Gold Ada Exclusive",
+    guests: "50 – 200 gostiju",
+    text: "Elegantna sala sa kristalnim lusterima, mladenačkim stolom i podijumom za prvi ples.",
+    details: ["Kristalni lusteri i bele stolice", "Mladenački sto sa inicijalima", "Plesni podijum", "Zlatni podmetači i cvetni aranžmani"],
+    image: "sala" as const,
+  },
+  {
+    id: "grand",
+    name: "Grand Ada Exclusive",
+    guests: "100 – 400 gostiju",
+    text: "Za velika venčanja i proslave, do 400 gostiju.",
+    details: ["Isti kompleks, Obrenovački drum 17", "Za velika venčanja i proslave", "Veliki privatni parking"],
+    image: "kompleks" as const,
+  },
+  {
+    id: "basta",
+    name: "Privatna bašta",
+    guests: "Ceremonija na otvorenom",
+    text: "Bajkovita bašta za venčanje pod vedrim nebom i fotografisanje.",
+    details: ["Ceremonija pod vedrim nebom", "Senica za venčanje", "Zelenilo za fotografisanje"],
+    image: "basta" as const,
+  },
 ];
 
 /** "Sve na jednom mestu" — VERIFIKOVANO iz opisa objava. */
