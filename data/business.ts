@@ -64,7 +64,7 @@ export const spaces = [
 /** "Sve na jednom mestu" — VERIFIKOVANO iz opisa objava. */
 export const features = [
   { title: "Bajkovita bašta", text: "Privatna bašta za ceremoniju na otvorenom i fotografisanje." },
-  { title: "Elegantna sala", text: "Sala do 220 gostiju, uređena do poslednjeg detalja." },
+  { title: "Elegantna sala", text: "Sala za 50 do 200 gostiju, uređena do poslednjeg detalja." },
   { title: "Izdašna gozba", text: "Neograničena gozba i kompletna ponuda hrane." },
   { title: "Premium karta pića", text: "Pića za celo slavlje, od dobrodošlice do poslednje igre." },
   { title: "Besprekorna usluga", text: "Vaš zadatak je da uživate. Za sve ostalo brinemo mi." },

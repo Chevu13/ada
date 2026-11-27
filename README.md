@@ -15,4 +15,16 @@ npm run build
 | `data/business.ts` | adresa, telefon, Instagram, najava (rezervacije 2027), prostori, ponuda, "kako do nas", `siteUrl` |
 | `assets/images/` | fotografije i logo sa @gold_ada_exclusive_ |
 
-Upit za termin nema server: forma sastavi poruku, kopira je i otvara njihov Instagram DM (kanal koji navode u objavama).
+## Upit za termin → mejl
+
+Forma šalje upit na `/api/upit`, a ruta ga prosleđuje mejlom preko [Resend](https://resend.com). U Vercel → Settings → Environment Variables dodati:
+
+| Promenljiva | Vrednost |
+|---|---|
+| `RESEND_API_KEY` | API ključ sa resend.com |
+| `INQUIRY_TO` | mejl lokala na koji stižu upiti |
+| `INQUIRY_FROM` | opciono, npr. `Gold Ada <upit@domen.rs>` (domen verifikovan u Resend-u) |
+
+Dok ovo nije podešeno, forma nudi da se isti upit pošalje preko Instagram DM-a ili poziva telefonom.
+
+Test: `node --test lib/inquiry.test.ts`

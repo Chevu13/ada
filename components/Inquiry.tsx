@@ -1,35 +1,18 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { ANY_SPACE, inquiryText, validateInquiry, type Inquiry as Form } from "@/lib/inquiry";
 import { business, occasions, spaces } from "@/data/business";
 import { Ornament } from "./Ornament";
 import { Reveal } from "./ui";
 import { accent, h2, label, section, wrap } from "./styles";
 
-type Form = { name: string; occasion: string; space: string; date: string; guests: string; note: string };
-
-const ANY_SPACE = "Još ne znam";
-
-/** Tekst upita — šalje se kao poruka na Instagram (njihov kanal: "Pišite nam u DM") ili čita telefonom. */
-export function inquiryText(f: Form) {
-  return [
-    `Dobar dan, zanima me termin u ${business.name}.`,
-    `Ime: ${f.name}`,
-    `Proslava: ${f.occasion}`,
-    f.space !== ANY_SPACE && `Prostor: ${f.space}`,
-    f.date && `Datum: ${f.date.split("-").reverse().join(".")}.`,
-    f.guests && `Broj gostiju: ${f.guests}`,
-    f.note && `Napomena: ${f.note}`,
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
-
 const field = "mt-2 block w-full border-0 border-b border-ink/25 bg-transparent px-0 py-3 text-lg text-ink outline-none transition-colors placeholder:text-ink/35 focus:border-crust";
 
 export function Inquiry() {
-  const [f, setF] = useState<Form>({ name: "", occasion: occasions[0], space: ANY_SPACE, date: "", guests: "", note: "" });
-  const [state, setState] = useState<"idle" | "copied" | "manual" | "error">("idle");
+  const [f, setF] = useState<Form>({ name: "", phone: "", email: "", occasion: occasions[0], space: ANY_SPACE, date: "", guests: "", note: "", website: "" });
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "fallback" | "error">("idle");
+  const [error, setError] = useState("");
   const set = (k: keyof Form) => (e: { target: { value: string } }) => setF((v) => ({ ...v, [k]: e.target.value }));
 
   // Klik na "Upit za ovaj prostor" u sekciji Prostor unapred bira prostor.
@@ -41,13 +24,28 @@ export function Inquiry() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (f.name.trim().length < 2) return setState("error");
-    try {
-      await navigator.clipboard.writeText(inquiryText(f));
-      setState("copied");
-    } catch {
-      setState("manual"); // bez dozvole za clipboard: prikazujemo tekst da ga posetilac sam kopira
+    const v = validateInquiry(f);
+    if (!v.ok) {
+      setError(v.error);
+      return setState("error");
     }
+    setState("sending");
+    try {
+      const res = await fetch("/api/upit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(f) });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; fallback?: boolean };
+      if (res.ok) return setState("sent");
+      if (data.fallback) return setState("fallback"); // mejl još nije podešen ili servis ne radi
+      setError(data.error ?? "Slanje nije uspelo.");
+      setState("error");
+    } catch {
+      setState("fallback");
+    }
+  }
+
+  // Rezerva: isti upit poslat kao Instagram poruka (njihov kanal "Pišite nam u DM").
+  async function sendViaInstagram() {
+    const v = validateInquiry(f);
+    if (v.ok) await navigator.clipboard?.writeText(inquiryText(v.data, business.name)).catch(() => {});
     window.open(business.instagram.dm, "_blank", "noopener,noreferrer");
   }
 
@@ -80,12 +78,22 @@ export function Inquiry() {
         </Reveal>
 
         <Reveal delay={0.1} className="lg:col-span-7">
-          <form onSubmit={onSubmit} noValidate className="border border-crust/40 bg-paper p-6 shadow-[0_30px_80px_-40px_rgba(27,24,20,.35)] md:p-10">
+          <form onSubmit={onSubmit} noValidate className="relative border border-crust/40 bg-paper p-6 shadow-[0_30px_80px_-40px_rgba(27,24,20,.35)] md:p-10">
             <div className="grid gap-7 sm:grid-cols-2">
               <label className="block sm:col-span-2">
                 <span className={`${label} text-muted`}>Ime i prezime</span>
                 <input className={field} value={f.name} onChange={set("name")} autoComplete="name" required placeholder="Vaše ime" />
               </label>
+              <label className="block">
+                <span className={`${label} text-muted`}>Telefon</span>
+                <input className={field} type="tel" inputMode="tel" value={f.phone} onChange={set("phone")} autoComplete="tel" required placeholder="06x xxx xxxx" />
+              </label>
+              <label className="block">
+                <span className={`${label} text-muted`}>E-mail (opciono)</span>
+                <input className={field} type="email" inputMode="email" value={f.email} onChange={set("email")} autoComplete="email" placeholder="vas@mejl.com" />
+              </label>
+              {/* zamka za spam botove: skriveno od ljudi i čitača ekrana */}
+              <input type="text" name="website" value={f.website} onChange={set("website")} tabIndex={-1} autoComplete="off" aria-hidden className="absolute -left-[9999px] h-0 w-0 opacity-0" />
               <label className="block">
                 <span className={`${label} text-muted`}>Vrsta proslave</span>
                 <select className={field} value={f.occasion} onChange={set("occasion")}>
@@ -116,27 +124,30 @@ export function Inquiry() {
               </label>
             </div>
 
-            {state === "error" && (
-              <p role="alert" className="mt-6 text-[0.95rem] text-tomato-deep">
-                Unesite ime i prezime.
-              </p>
-            )}
-            {state === "copied" && (
-              <p role="status" className="mt-6 text-[0.95rem] text-ink-soft">
-                Upit je kopiran — nalepite ga u Instagram poruku koja se otvorila.
-              </p>
-            )}
-
-            {state === "manual" && (
-              <pre className="mt-6 whitespace-pre-wrap border border-ink/15 bg-cream p-4 font-sans text-[0.95rem] text-ink-soft">{inquiryText(f)}</pre>
-            )}
+            <div aria-live="polite">
+              {state === "error" && <p role="alert" className="mt-6 text-[0.95rem] text-tomato-deep">{error}</p>}
+              {state === "sent" && (
+                <p className="mt-6 border-l-2 border-crust bg-cream px-4 py-3 text-[1rem] text-ink">
+                  Hvala! Upit je poslat — javićemo vam se u najkraćem roku.
+                </p>
+              )}
+              {state === "fallback" && (
+                <div className="mt-6 border-l-2 border-crust bg-cream px-4 py-3 text-[0.98rem] text-ink-soft">
+                  Trenutno ne možemo da pošaljemo mejl. Pošaljite isti upit preko Instagrama ili nas pozovite.
+                  <button type="button" onClick={sendViaInstagram} className="mt-3 block font-label text-[0.76rem] font-medium uppercase tracking-[0.2em] text-ink underline underline-offset-4 hover:text-crust">
+                    Pošalji preko Instagrama ↗
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button
                 type="submit"
-                className="inline-flex min-h-13 items-center justify-center gap-3 rounded-full bg-crust px-8 font-label text-[0.8rem] font-medium uppercase tracking-[0.22em] text-ink transition-colors hover:bg-ink hover:text-paper"
+                disabled={state === "sending" || state === "sent"}
+                className="shine inline-flex min-h-13 items-center justify-center gap-3 rounded-full bg-crust px-8 font-label text-[0.8rem] font-medium uppercase tracking-[0.22em] text-ink transition-colors hover:bg-gold-light disabled:opacity-60"
               >
-                Pošalji upit na Instagram ↗
+                {state === "sending" ? "Šaljem…" : state === "sent" ? "Upit je poslat ✓" : "Pošalji upit"}
               </button>
               <a
                 href={business.phone.href}
@@ -145,7 +156,6 @@ export function Inquiry() {
                 Pozovite
               </a>
             </div>
-            <p className="mt-4 text-[0.85rem] text-muted">Upit se ne šalje automatski: kopiramo ga i otvaramo njihov Instagram, gde ga samo nalepite i pošaljete.</p>
           </form>
         </Reveal>
       </div>
